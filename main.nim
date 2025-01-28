@@ -3,12 +3,18 @@ import raylib, std/[math, times, strutils]
 const
   ww = 200
   wh = 200
+  scale = 2
 
+let
+  windowWidth: int32 = ww * scale
+  windowHeight: int32 = wh * scale
 
-initWindow(ww, wh, "Naylib Clock - By Hevanafa (Jan 2025)")
+initWindow(windowWidth, windowHeight, "Naylib Clock - By Hevanafa (Jan 2025)")
 
-let surface = loadRenderTexture(ww, wh)
-setTextureFilter(surface.texture, TextureFilter.Point)
+let palette = [
+  Color(r: 0x43, g: 0x52, b: 0x3d, a: 0xff),
+  Color(r: 0xc7, g: 0xf0, b: 0xd8, a: 0xff)
+]
 
 setTargetFPS(20)
 
@@ -35,10 +41,12 @@ var
   weekday = ""
   w = 0
 
+let buffer = loadRenderTexture(ww, wh)
+setTextureFilter(buffer.texture, TextureFilter.Point)
+
 while not windowShouldClose():
-  beginDrawing()
-  # your drawing code here
-  clearBackground(Black)
+  beginTextureMode(buffer)
+  clearBackground(palette[0])
   
   # drawLine(0, 0, ww, wh, Black)
   # drawText(fmt"{h}", 0, 0, 12, Black)
@@ -52,7 +60,7 @@ while not windowShouldClose():
     x2 = cx + sin(angle) * 85
     y2 = cy + cos(angle) * 85
 
-    drawLine(x1.int32, y1.int32, x2.int32, y2.int32, SkyBlue)
+    drawLine(x1.int32, y1.int32, x2.int32, y2.int32, palette[1])
 
   # draw the current time
   datetime = now()
@@ -67,21 +75,22 @@ while not windowShouldClose():
   drawText(
     weekday,
     (cx - w / 2).int32, (wh * 2 / 3).int32, 12,
-    if datetime.weekday == dSun: Red else: SkyBlue)
+    # if datetime.weekday == dSun: Red else: SkyBlue)
+    palette[1])
 
   # hour hand
   angle = degToRad((h.float32 + (m / 60)) * 30)
   x = cx + sin(angle) * 45
   y = cy + -cos(angle) * 45
 
-  drawLine(cx.int32, cy.int32, x.int32, y.int32, SkyBlue)
+  drawLine(cx.int32, cy.int32, x.int32, y.int32, palette[1])
 
   # minute hand
   angle = degToRad((m.float32 + (s / 60)) * 6)
   x = cx + sin(angle) * 70
   y = cy + -cos(angle) * 70
 
-  drawLine(cx.int32, cy.int32, x.int32, y.int32, SkyBlue)
+  drawLine(cx.int32, cy.int32, x.int32, y.int32, palette[1])
 
   # second hand
   angle = degToRad((s.float32 + (ms / 1000)) * 6)
@@ -90,10 +99,21 @@ while not windowShouldClose():
   x2 = cx + sin(angle) * 70
   y2 = cy + -cos(angle) * 70
 
-  drawLine(x1.int32, y1.int32, x2.int32, y2.int32, Red)
+  drawLine(x1.int32, y1.int32, x2.int32, y2.int32, palette[1])
 
-  drawCircle(cx.int32, cy.int32, 3, SkyBlue)
+  drawCircle(cx.int32, cy.int32, 3, palette[1])
 
+  endTextureMode()
+
+
+  beginDrawing()
+  clearBackground(Black)
+  # DrawTexturePro is overloaded with DrawTexture
+  drawTexture(
+    buffer.texture,
+    Rectangle(x: 0, y: 0, width: ww.float32, height: -wh.float32),
+    Rectangle(x: 0, y: 0, width: windowWidth.float32, height: windowHeight.float32),
+    Vector2(x: 0, y: 0), 0, White)
   endDrawing()
 
 closeWindow()
